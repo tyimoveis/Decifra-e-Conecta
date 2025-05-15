@@ -136,7 +136,7 @@
   <h1>🎲 Decifra e Conecta</h1>
   <p>Escolha uma carta de cada cor e clique em "Verificar Conexão"</p>
   <div id="cartas-container"></div>
-  <button onclick="verificarConexao()">✅ Verificar Conexão</button>
+  <button id="verificar">✅ Verificar Conexão</button>
   <button onclick="abrirRegras()">📜 Ver Regras</button>
   <div id="mensagem"></div>
   <canvas id="confete"></canvas>
@@ -170,6 +170,7 @@
     const mensagem = document.getElementById('mensagem');
     const synth = window.speechSynthesis;
     const modalRegras = document.getElementById('modalRegras');
+    const verificarBtn = document.getElementById('verificar');
 
     const cartas = [
       { tipo: 'emocao', texto: 'Alegria', emoji: '😊' },
@@ -185,33 +186,41 @@
 
     let selecionadas = { emocao: null, situacao: null, comunicacao: null };
 
-    cartas.forEach(({ tipo, texto, emoji }) => {
-      const div = document.createElement('div');
-      div.classList.add('carta', tipo);
-      div.innerHTML = `<div class="emoji">${emoji}</div>${texto}`;
-      div.onclick = () => {
-        if (selecionadas[tipo]) selecionadas[tipo].classList.remove('selecionada');
-        selecionadas[tipo] = div;
-        div.classList.add('selecionada');
-        falar(texto);
-      };
-      cartasContainer.appendChild(div);
-    });
+    function renderCartas() {
+      cartasContainer.innerHTML = "";
+      selecionadas = { emocao: null, situacao: null, comunicacao: null };
+      cartas.forEach(({ tipo, texto, emoji }) => {
+        const div = document.createElement('div');
+        div.classList.add('carta', tipo);
+        div.innerHTML = `<div class="emoji">${emoji}</div>${texto}`;
+        div.onclick = () => {
+          if (selecionadas[tipo]) selecionadas[tipo].classList.remove('selecionada');
+          selecionadas[tipo] = div;
+          div.classList.add('selecionada');
+          falar(texto);
+        };
+        cartasContainer.appendChild(div);
+      });
+    }
 
-    function verificarConexao() {
+    renderCartas();
+
+    verificarBtn.addEventListener('click', () => {
       const { emocao, situacao, comunicacao } = selecionadas;
       if (emocao && situacao && comunicacao) {
         const resultado = `${emocao.innerText} + ${situacao.innerText} + ${comunicacao.innerText}`;
         mensagem.innerText = `👏 Você conectou: ${resultado}`;
         falar("Parabéns! Você fez uma conexão!");
         startConfetti();
-        Object.values(selecionadas).forEach(el => el.classList.remove('selecionada'));
-        selecionadas = { emocao: null, situacao: null, comunicacao: null };
+        setTimeout(() => {
+          renderCartas();
+          mensagem.innerText = "🎲 Vamos tentar uma nova combinação!";
+        }, 4000);
       } else {
         mensagem.innerText = "⚠️ Escolha uma carta de cada cor.";
         falar("Escolha uma carta de cada cor");
       }
-    }
+    });
 
     function falar(texto) {
       const utter = new SpeechSynthesisUtterance(texto);
